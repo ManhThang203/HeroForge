@@ -2,20 +2,14 @@
   "name": "heroforge",
   "private": true,
   "scripts": {
+    "dev": "pnpm --parallel --filter @heroforge/server --filter @heroforge/web dev",
     "dev:server": "pnpm --filter @heroforge/server dev",
+    "dev:web": "pnpm --filter @heroforge/web dev",
     "build:server": "pnpm --filter @heroforge/server build",
+    "build:web": "pnpm --filter @heroforge/web build",
     "test:server": "pnpm --filter @heroforge/server test"
   },
   "engines": {
     "node": ">=20"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@prisma/client",
-      "@prisma/engines",
-      "prisma",
-      "sharp",
-      "esbuild"
-    ]
   }
 }
