@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 46, "column": 0}, "map": {"version":3,"sources":["file:///D:/HeroForge/apps/web/src/app/providers.tsx"],"sourcesContent":["\"use client\";\r\n\r\nimport { ThemeProvider } from \"next-themes\";\r\nimport { Toaster } from \"sonner\";\r\nimport type { ReactNode } from \"react\";\r\n\r\nexport function Providers({ children }: { children: ReactNode }) {\r\n  return (\r\n    <ThemeProvider attribute=\"class\" defaultTheme=\"dark\" enableSystem>\r\n      {children}\r\n      <Toaster\r\n        theme=\"system\"\r\n        position=\"top-center\"\r\n        richColors\r\n        toastOptions={{\r\n          className: \"border border-[var(--border)] bg-[var(--surface)]\",\r\n        }}\r\n      />\r\n    </ThemeProvider>\r\n  );\r\n}\r\n"],"names":["Providers","children","attribute","defaultTheme","enableSystem","theme","position","richColors","toastOptions","className"],"mappings":";;;;;AAEA;AACA;AAHA;;;;AAMO,SAASA,UAAU,EAAEC,QAAQ,EAA2B;IAC7D,qBACE,6VAAC,0QAAa;QAACC,WAAU;QAAQC,cAAa;QAAOC,YAAY;;YAC9DH;0BACD,6VAAC,mRAAO;gBACNI,OAAM;gBACNC,UAAS;gBACTC,UAAU;gBACVC,cAAc;oBACZC,WAAW;gBACb;;;;;;;;;;;;AAIR"}}]
+}
