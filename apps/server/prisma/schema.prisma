@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model GenerationLog {
+  id              String    @id @default(cuid())
+  createdAt       DateTime  @default(now())
+  finishedAt      DateTime?
+  name            String
+  sourceImageUrl  String?   @db.Text
+  resultImageUrl  String?   @db.Text
+  prompt          String    @db.Text
+  model           String
+  requestPayload  Json
+  httpStatus      Int?
+  responseSummary Json?
+  latencyMs       Int?
+  status          String
+  errorMessage    String?   @db.Text
+
+  @@index([createdAt(sort: Desc)])
+  @@map("generation_logs")
+}
