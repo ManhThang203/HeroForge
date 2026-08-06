@@ -7,6 +7,7 @@
     "dev:web": "pnpm --filter @heroforge/web dev",
     "build:server": "pnpm --filter @heroforge/server build",
     "build:web": "pnpm --filter @heroforge/web build",
+    "start:server": "pnpm --filter @heroforge/server start",
     "test:server": "pnpm --filter @heroforge/server test"
   },
   "engines": {

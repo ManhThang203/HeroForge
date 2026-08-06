@@ -1,0 +1,30 @@
+# Render Blueprint — import từ repo hoặc copy Build/Start vào Web Service thủ công.
+# Secret values: set trên Render Dashboard → Environment (không commit vào git).
+
+services:
+  - type: web
+    name: heroforge-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: .
+    buildCommand: corepack enable && pnpm install && pnpm --filter @heroforge/server build
+    startCommand: pnpm --filter @heroforge/server start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: DATABASE_URL
+        sync: false
+      - key: AI_GATEWAY_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

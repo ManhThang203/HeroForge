@@ -85,7 +85,7 @@ pnpm dev:web      # http://localhost:3000
 |------|------------|----------|
 | **A — Input** | Open `http://localhost:3000`, enter a hero name, upload a portrait **or** use camera capture | Preview shows; camera deny shows a Sonner toast |
 | **B — Generate** | Click **Generate superhero** | Loading skeleton ~30–90s; BE uploads → AI → watermark → Cloudinary |
-| **C — Result** | View watermarked image | Download button opens/saves result URL |
+| **C — Result** | View watermarked image | Download button saves the image to your device |
 | **D — Logs** | Scroll to **Log viewer** | New row with status, latency, expandable payload/response; polls every 2s while generating |
 
 ## API Endpoints
@@ -136,33 +136,160 @@ HeroForge/
           shared/           # button, input, badge, theme toggle
         hooks/ lib/ types/
   .env.example
+  render.yaml               # Render Blueprint (BE)
   package.json
   pnpm-workspace.yaml
 ```
 
-## Deploy bonus (optional)
+## Deploy (ý tưởng 1 — bạn bấm Deploy trên web)
 
-### Backend → Render
+Agent/repo đã chuẩn bị sẵn [`render.yaml`](render.yaml) + [`apps/web/vercel.json`](apps/web/vercel.json).  
+**Bạn** tự tạo MySQL cloud, migrate, rồi Deploy trên Render + Vercel (không cần đưa API token cho AI).
 
-1. Create a **Web Service** from this repo; root/start command scoped to `apps/server`.
-2. Build: `pnpm install && pnpm --filter @heroforge/server build`
-3. Start: `pnpm --filter @heroforge/server start`
-4. Set env vars from `apps/server/.env` (use a hosted MySQL or keep Neon if you migrate later).
-5. Run `pnpm --filter @heroforge/server prisma:migrate:deploy` against the production DB.
-6. Set `CORS_ORIGIN` to your Vercel FE URL.
+```
+Browser → Vercel (FE) → Render (API) → MySQL cloud + Cloudinary + AI Gateway
+```
 
-### Frontend → Vercel
+**Thứ tự bắt buộc:** Bước 0 → 1 → 2 → 3 → 4.
 
-1. Import the repo; set **Root Directory** to `apps/web`.
-2. Framework: Next.js (auto).
-3. Env: `NEXT_PUBLIC_API_URL=https://your-render-api.onrender.com`
-4. Deploy → open the live URL and verify flow A–D.
+---
 
-### Notes
+### Bước 0 — MySQL cloud + migrate
 
-- Camera requires **HTTPS** in production (localhost is fine for local testing).
-- Each generate costs ~$0.04 on Flux Kontext Pro — avoid spam retries on the free credit.
-- Prefer portrait photos with a clear face for identity preservation.
+Local MySQL **không** dùng được khi API chạy trên Render. Cần MySQL public (ví dụ [Railway](https://railway.app)).
+
+1. Railway → **New Project** → **Provision MySQL**.
+2. Click service **MySQL** → tab **Variables** (hoặc **Connect**).
+3. Lấy `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`  
+   (hoặc copy sẵn `MYSQL_URL` / `DATABASE_URL` nếu Railway đã ghép sẵn).
+4. Ghép một dòng:
+   ```env
+   DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DATABASE
+   ```
+   Password có `@` → đổi thành `%40`.
+5. Mở [`apps/server/.env`](apps/server/.env):
+   - **Backup** dòng `DATABASE_URL` local.
+   - Thay tạm bằng URL cloud.
+6. Chạy migrate:
+   ```bash
+   pnpm --filter @heroforge/server prisma:migrate:deploy
+   ```
+7. Kiểm tra (Navicat): có bảng `generation_logs` và `_prisma_migrations`.
+8. Đổi lại `DATABASE_URL` local nếu vẫn muốn `pnpm dev:server` ở nhà.  
+   URL cloud sẽ dán lại vào **Render Environment** ở Bước 1.
+
+---
+
+### Bước 1 — Backend trên Render
+
+1. Push code (kèm `render.yaml`) lên GitHub.
+2. [render.com](https://render.com) → **New +** → **Web Service** → chọn repo HeroForge.
+3. Cấu hình (hoặc dùng Blueprint từ `render.yaml`):
+
+| Field | Value |
+|-------|--------|
+| Name | `heroforge-api` |
+| Root Directory | *(để trống)* |
+| Runtime | Node |
+| Build Command | `corepack enable && pnpm install && pnpm --filter @heroforge/server build` |
+| Start Command | `pnpm --filter @heroforge/server start` |
+| Instance | Free |
+
+4. **Environment** (điền giá trị thật, không commit):
+
+| Key | Value |
+|-----|--------|
+| `NODE_ENV` | `production` |
+| `PORT` | `4000` |
+| `DATABASE_URL` | MySQL cloud URL (Bước 0) |
+| `AI_GATEWAY_API_KEY` | key Vercel AI Gateway |
+| `CLOUDINARY_CLOUD_NAME` | … |
+| `CLOUDINARY_API_KEY` | … |
+| `CLOUDINARY_API_SECRET` | … |
+| `CORS_ORIGIN` | tạm `http://localhost:3000` — **đổi ở Bước 3** |
+
+5. **Create Web Service** → đợi Deploy xanh.
+6. Copy URL API, ví dụ `https://heroforge-api.onrender.com`.
+7. Test:
+   ```bash
+   curl https://YOUR-API.onrender.com/api/health
+   ```
+   Kỳ vọng: `"success": true`. Swagger: `/api/docs`.
+
+> Free tier: service có thể **sleep** — request đầu chậm 30–60s.
+
+---
+
+### Bước 2 — Frontend trên Vercel
+
+1. [vercel.com](https://vercel.com) → **Add New…** → **Project** → Import repo HeroForge.
+2. Cấu hình:
+
+| Field | Value |
+|-------|--------|
+| Framework | Next.js |
+| **Root Directory** | `apps/web` ← bắt buộc |
+| Install / Build | theo [`apps/web/vercel.json`](apps/web/vercel.json) (hoặc default) |
+
+3. **Environment Variables**:
+
+| Key | Value |
+|-----|--------|
+| `NEXT_PUBLIC_API_URL` | `https://YOUR-API.onrender.com` (không có `/` cuối) |
+
+   Không đưa AI/Cloudinary secrets lên Vercel.
+
+4. **Deploy** → copy URL FE, ví dụ `https://heroforge.vercel.app`.
+
+---
+
+### Bước 3 — Nối CORS
+
+1. Render → Web Service → **Environment**.
+2. Sửa:
+   ```env
+   CORS_ORIGIN=https://heroforge.vercel.app
+   ```
+3. **Manual Deploy** / Save để BE restart.
+4. Không làm bước này → browser báo lỗi CORS khi FE gọi API.
+
+---
+
+### Bước 4 — Checklist live (A–D) + troubleshooting
+
+| # | Check | Kỳ vọng |
+|---|--------|---------|
+| 1 | `GET {API}/api/health` | 200 |
+| 2 | Mở FE Vercel | UI HeroForge |
+| 3 | Name + ảnh → Generate | Ảnh watermark |
+| 4 | Download | File tải về máy |
+| 5 | Log Viewer | Log mới (status/latency) |
+| 6 | Camera | Xin quyền OK (HTTPS) |
+
+| Lỗi | Nguyên nhân | Xử lý |
+|-----|-------------|--------|
+| CORS trên FE | Sai `CORS_ORIGIN` | Đúng URL Vercel `https://…`, không slash cuối; redeploy BE |
+| `Failed to fetch` | Sai `NEXT_PUBLIC_API_URL` / BE sleep | Kiểm tra health; đợi wake-up; redeploy FE sau khi sửa env |
+| BE crash lúc start | Thiếu env / sai `DATABASE_URL` | Xem Render **Logs** |
+| Prisma / table missing | Chưa migrate cloud | Chạy lại Bước 0 |
+| Generate 502 | Cloudinary/AI key hoặc quota | Kiểm tra keys + `GET /api/logs` |
+
+**Notes:** Camera cần HTTPS (Vercel OK). Mỗi gen ~$0.04. Ảnh chân dung rõ mặt cho identity tốt hơn.
+
+---
+
+### Checklist bàn giao (việc **bạn** làm)
+
+Sau khi pull/push các file deploy config từ repo:
+
+- [ ] Push `main` (hoặc nhánh deploy) lên GitHub có `render.yaml` + `apps/web/vercel.json`
+- [ ] Tạo MySQL cloud (Railway/…) và có `DATABASE_URL`
+- [ ] Chạy `pnpm --filter @heroforge/server prisma:migrate:deploy` với URL cloud
+- [ ] Deploy BE trên Render + điền đủ env + `/api/health` OK
+- [ ] Deploy FE trên Vercel (Root = `apps/web`) + `NEXT_PUBLIC_API_URL`
+- [ ] Đặt `CORS_ORIGIN` = URL Vercel production trên Render
+- [ ] Verify flow A–D trên URL live
+- [ ] **Không** commit `apps/server/.env` / `apps/web/.env.local`
 
 ## BE gate (already implemented)
 
