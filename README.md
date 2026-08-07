@@ -199,11 +199,12 @@ Local MySQL **không** dùng được khi API chạy trên Render. Cần MySQL p
 | Name | `heroforge-api` |
 | Root Directory | *(để trống)* |
 | Runtime | Node |
-| Build Command | `npm install -g pnpm@9 && pnpm install && pnpm --filter @heroforge/server build` |
+| Build Command | `npm install -g pnpm@9 && pnpm install --prod=false && pnpm --filter @heroforge/server build` |
 | Start Command | `pnpm --filter @heroforge/server start` |
 | Instance | Free |
 
-> **Không** dùng `corepack enable` trên Render — sẽ lỗi `EROFS: read-only file system` khi ghi `/usr/bin/pnpm`.
+> **Không** dùng `corepack enable` trên Render — sẽ lỗi `EROFS: read-only file system` khi ghi `/usr/bin/pnpm`.  
+> Dùng `pnpm install --prod=false` để lúc build vẫn có đủ tool (tránh `prisma: not found` / `tsc: not found` khi `NODE_ENV=production`).
 
 4. **Environment** (điền giá trị thật, không commit):
 
@@ -280,6 +281,7 @@ Local MySQL **không** dùng được khi API chạy trên Render. Cần MySQL p
 | Lỗi | Nguyên nhân | Xử lý |
 |-----|-------------|--------|
 | Build `EROFS` / `unlink '/usr/bin/pnpm'` | Dùng `corepack enable` trên Render | Đổi Build Command sang `npm install -g pnpm@9 && …` (xem bảng trên) |
+| Build `prisma: not found` / `tsc: not found` | `pnpm install` bỏ `devDependencies` khi `NODE_ENV=production` | Dùng `pnpm install --prod=false`; repo đã chuyển `prisma` + `typescript` sang `dependencies` |
 | CORS trên FE | Sai `CORS_ORIGIN` | Đúng URL Vercel `https://…`, không slash cuối; redeploy BE |
 | `Failed to fetch` | Sai `NEXT_PUBLIC_API_URL` / BE sleep | Kiểm tra health; đợi wake-up; redeploy FE sau khi sửa env |
 | BE crash lúc start | Thiếu env / sai `DATABASE_URL` | Xem Render **Logs** |

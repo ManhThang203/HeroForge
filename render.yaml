@@ -1,7 +1,9 @@
 # Render Blueprint — import từ repo hoặc copy Build/Start vào Web Service thủ công.
 # Secret values: set trên Render Dashboard → Environment (không commit vào git).
 #
-# Không dùng `corepack enable` trên Render (EROFS: read-only /usr/bin).
+# - Không dùng `corepack enable` trên Render (EROFS: read-only /usr/bin).
+# - `pnpm install --prod=false` để cài đủ tool build (types, …) khi NODE_ENV=production.
+# - `prisma` + `typescript` nằm trong dependencies của @heroforge/server.
 
 services:
   - type: web
@@ -10,7 +12,7 @@ services:
     plan: free
     region: singapore
     rootDir: .
-    buildCommand: npm install -g pnpm@9 && pnpm install && pnpm --filter @heroforge/server build
+    buildCommand: npm install -g pnpm@9 && pnpm install --prod=false && pnpm --filter @heroforge/server build
     startCommand: pnpm --filter @heroforge/server start
     healthCheckPath: /api/health
     envVars:
