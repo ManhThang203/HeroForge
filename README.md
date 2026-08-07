@@ -9,8 +9,18 @@ Monorepo: **Next.js 16** frontend + **Express MVC** backend. Upload/capture a po
 | Frontend | Next.js 16, React 19, Tailwind CSS 4, next-themes, Sonner, Lucide, Radix Collapsible |
 | Backend | Express + TypeScript (MVC), Zod, Swagger |
 | Database | Prisma 7 + MySQL |
-| AI | Vercel AI Gateway + `bfl/flux-kontext-pro` (~$0.04/image) |
+| AI | Vercel AI Gateway + `bfl/flux-kontext-pro` |
 | Media | Cloudinary (upload/result) + Sharp (watermark) |
+
+## Live (production)
+
+| Surface | URL |
+|---------|-----|
+| Frontend | https://hero-forge-web.vercel.app/ |
+| API base | https://heroforge.onrender.com/api |
+| Swagger docs | https://heroforge.onrender.com/api/docs/ |
+
+> Free Render may sleep when idle — first request after idle can take 30–60s.
 
 ## Prerequisites
 
@@ -288,7 +298,7 @@ Local MySQL **không** dùng được khi API chạy trên Render. Cần MySQL p
 | Prisma / table missing | Chưa migrate cloud | Chạy lại Bước 0 |
 | Generate 502 | Cloudinary/AI key hoặc quota | Kiểm tra keys + `GET /api/logs` |
 
-**Notes:** Camera cần HTTPS (Vercel OK). Mỗi gen ~$0.04. Ảnh chân dung rõ mặt cho identity tốt hơn.
+**Notes:** Camera cần HTTPS (Vercel OK). Ảnh chân dung rõ mặt cho identity tốt hơn.
 
 ---
 
