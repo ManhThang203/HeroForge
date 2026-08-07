@@ -199,17 +199,20 @@ Local MySQL **không** dùng được khi API chạy trên Render. Cần MySQL p
 | Name | `heroforge-api` |
 | Root Directory | *(để trống)* |
 | Runtime | Node |
-| Build Command | `corepack enable && pnpm install && pnpm --filter @heroforge/server build` |
+| Build Command | `npm install -g pnpm@9 && pnpm install && pnpm --filter @heroforge/server build` |
 | Start Command | `pnpm --filter @heroforge/server start` |
 | Instance | Free |
+
+> **Không** dùng `corepack enable` trên Render — sẽ lỗi `EROFS: read-only file system` khi ghi `/usr/bin/pnpm`.
 
 4. **Environment** (điền giá trị thật, không commit):
 
 | Key | Value |
 |-----|--------|
 | `NODE_ENV` | `production` |
+| `NODE_VERSION` | `20` |
 | `PORT` | `4000` |
-| `DATABASE_URL` | MySQL cloud URL (Bước 0) |
+| `DATABASE_URL` | MySQL **public** URL (`*.proxy.rlwy.net`, không dùng `.internal`) |
 | `AI_GATEWAY_API_KEY` | key Vercel AI Gateway |
 | `CLOUDINARY_CLOUD_NAME` | … |
 | `CLOUDINARY_API_KEY` | … |
@@ -276,6 +279,7 @@ Local MySQL **không** dùng được khi API chạy trên Render. Cần MySQL p
 
 | Lỗi | Nguyên nhân | Xử lý |
 |-----|-------------|--------|
+| Build `EROFS` / `unlink '/usr/bin/pnpm'` | Dùng `corepack enable` trên Render | Đổi Build Command sang `npm install -g pnpm@9 && …` (xem bảng trên) |
 | CORS trên FE | Sai `CORS_ORIGIN` | Đúng URL Vercel `https://…`, không slash cuối; redeploy BE |
 | `Failed to fetch` | Sai `NEXT_PUBLIC_API_URL` / BE sleep | Kiểm tra health; đợi wake-up; redeploy FE sau khi sửa env |
 | BE crash lúc start | Thiếu env / sai `DATABASE_URL` | Xem Render **Logs** |

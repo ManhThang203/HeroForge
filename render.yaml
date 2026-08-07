@@ -1,5 +1,7 @@
 # Render Blueprint — import từ repo hoặc copy Build/Start vào Web Service thủ công.
 # Secret values: set trên Render Dashboard → Environment (không commit vào git).
+#
+# Không dùng `corepack enable` trên Render (EROFS: read-only /usr/bin).
 
 services:
   - type: web
@@ -8,12 +10,14 @@ services:
     plan: free
     region: singapore
     rootDir: .
-    buildCommand: corepack enable && pnpm install && pnpm --filter @heroforge/server build
+    buildCommand: npm install -g pnpm@9 && pnpm install && pnpm --filter @heroforge/server build
     startCommand: pnpm --filter @heroforge/server start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "20"
       - key: PORT
         value: "4000"
       - key: DATABASE_URL
