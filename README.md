@@ -159,24 +159,32 @@ Browser → Vercel (FE) → Render (API) → MySQL cloud + Cloudinary + AI Gatew
 Local MySQL **không** dùng được khi API chạy trên Render. Cần MySQL public (ví dụ [Railway](https://railway.app)).
 
 1. Railway → **New Project** → **Provision MySQL**.
-2. Click service **MySQL** → tab **Variables** (hoặc **Connect**).
-3. Lấy `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`  
-   (hoặc copy sẵn `MYSQL_URL` / `DATABASE_URL` nếu Railway đã ghép sẵn).
-4. Ghép một dòng:
+2. Click service **MySQL** → tab **Variables** hoặc **Connect**.
+3. **Quan trọng — chọn đúng URL public (TCP Proxy), không dùng URL internal:**
+
+   | Dùng khi | Host trong URL | Ai kết nối được |
+   |----------|----------------|-----------------|
+   | Migrate từ máy bạn / Navicat / Render bên ngoài | `*.proxy.rlwy.net` hoặc host **public** | Máy local + service ngoài Railway |
+   | Chỉ service **trong cùng** project Railway | `mysql.railway.internal` | **Không** dùng từ laptop → lỗi `P1001` |
+
+   Trên Railway: **Connect** → chọn **Public URL** / **TCP Proxy** (hoặc biến kiểu `MYSQL_PUBLIC_URL` / `DATABASE_PUBLIC_URL` nếu có).  
+   Host phải **không** chứa `.railway.internal`.
+
+4. Ghép (hoặc copy public URL sẵn):
    ```env
-   DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DATABASE
+   DATABASE_URL=mysql://USER:PASSWORD@HOST_PUBLIC:PORT_PUBLIC/DATABASE
    ```
-   Password có `@` → đổi thành `%40`.
+   Password có `@` → `%40`. Port public thường **không** phải `3306` (Railway gán port proxy riêng).
 5. Mở [`apps/server/.env`](apps/server/.env):
    - **Backup** dòng `DATABASE_URL` local.
-   - Thay tạm bằng URL cloud.
+   - Thay tạm bằng URL **public** cloud.
 6. Chạy migrate:
    ```bash
    pnpm --filter @heroforge/server prisma:migrate:deploy
    ```
-7. Kiểm tra (Navicat): có bảng `generation_logs` và `_prisma_migrations`.
+7. Kiểm tra (Navicat với host public): có bảng `generation_logs` và `_prisma_migrations`.
 8. Đổi lại `DATABASE_URL` local nếu vẫn muốn `pnpm dev:server` ở nhà.  
-   URL cloud sẽ dán lại vào **Render Environment** ở Bước 1.
+   URL cloud (public) sẽ dán lại vào **Render Environment** ở Bước 1.
 
 ---
 
